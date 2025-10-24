@@ -17,6 +17,7 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>9.9.0</version>
+            <type>jar</type>
         </dependency>
         
     </dependencies>
