@@ -20,20 +20,21 @@ public class Practica2 {
     public static void main(String[] args) throws SolrServerException, IOException {
 
         String file = "..\\corpus\\MED.QRY";
-        boolean end = false, start = true, done = false;
+        boolean end = false, start = true;
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 
             String line = "";
             String id = "";
-            ArrayList<String> words = new ArrayList();
+            String text = "";
+            
             int it = 0;
 
             final SolrClient client = new HttpSolrClient.Builder("http://localhost:8983/solr").build();
 
             do {
 
-                words.clear();
+                
 
                 if (start) {
                     line = br.readLine();
@@ -49,20 +50,9 @@ public class Practica2 {
                     br.readLine();
 
                     line = br.readLine();
-                    done = false;
                     while (line != null && !line.startsWith(".I")) {
 
-                        String trimmedLine = line.trim();
-
-                        if (!trimmedLine.isEmpty()) {
-                            String[] ar = trimmedLine.split("\\s+");
-
-                            for (int i = 0; i < ar.length; i++) {
-                                if (words.size() < 5) {
-                                    words.add(ar[i]);
-                                }
-                            }
-                        }
+                        text += line; 
 
                         line = br.readLine();
                     }
@@ -70,16 +60,11 @@ public class Practica2 {
                     if (line == null) {
                         end = true;
                     }
+                    
+                    
 
-                    System.out.println("\nPalabras de id ->" + id + "\n-----------------------");
-                    for (String w : words) {
-                        System.out.println("| " + w);
-                    }
-
-                    String searchTerms = String.join(" ", words);
-                    String escapedSearchTerms = ClientUtils.escapeQueryChars(searchTerms);
+                    String escapedSearchTerms = ClientUtils.escapeQueryChars(text);
                     SolrQuery q = new SolrQuery();
-
                     q.setQuery(escapedSearchTerms);
 
                     q.set("df", "text");
@@ -89,21 +74,25 @@ public class Practica2 {
 
                     SolrDocumentList list = response.getResults();
 
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter("Queries\\queryRes" + (it + 1)))) {
+                    try (BufferedWriter bw = new BufferedWriter(new FileWriter("trec_solr_file"))) {
+                        int j = 0;
                         for (SolrDocument doc : list) {
-                            bw.write("Document " + doc.getFieldValue("identifier") + "\n------------------\n");
-                            bw.write(doc.getFieldValue("text") + "\n\n");
+                            bw.write(it +" P0 "+ doc.getFieldValue("identifier")+" "+(j++)+" "+doc.getFieldValue("score")+"\n");
                         }
                     }
 
                 }
 
                 id = "";
+                text = "";
                 it++;
                 start = false;
 
             } while (!end);
+            
             client.close();
+            
+            
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
