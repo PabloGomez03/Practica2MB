@@ -22,7 +22,7 @@ public class Practica2 {
         String file = "..\\corpus\\MED.QRY";
         boolean end = false, start = true;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file)); BufferedWriter bw = new BufferedWriter(new FileWriter("trec_top_file"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file)); BufferedWriter bw = new BufferedWriter(new FileWriter("Prueba\\trec_top_file"))) {
 
             String line = "";
             String id = "";
@@ -65,7 +65,7 @@ public class Practica2 {
                     q.set("df", "text");
                     q.set("fl", "*, score");
 
-                    q.setRows(1000);
+                    q.setRows(100);
                     QueryResponse response = client.query("Practica1", q);
 
                     SolrDocumentList list = response.getResults();
