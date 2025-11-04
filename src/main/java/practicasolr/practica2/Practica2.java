@@ -22,19 +22,15 @@ public class Practica2 {
         String file = "..\\corpus\\MED.QRY";
         boolean end = false, start = true;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file)); BufferedWriter bw = new BufferedWriter(new FileWriter("trec_top_file"))) {
 
             String line = "";
             String id = "";
             String text = "";
-            
-            int it = 0;
 
             final SolrClient client = new HttpSolrClient.Builder("http://localhost:8983/solr").build();
 
             do {
-
-                
 
                 if (start) {
                     line = br.readLine();
@@ -52,7 +48,7 @@ public class Practica2 {
                     line = br.readLine();
                     while (line != null && !line.startsWith(".I")) {
 
-                        text += line; 
+                        text += line;
 
                         line = br.readLine();
                     }
@@ -60,39 +56,44 @@ public class Practica2 {
                     if (line == null) {
                         end = true;
                     }
-                    
-                    
 
                     String escapedSearchTerms = ClientUtils.escapeQueryChars(text);
                     SolrQuery q = new SolrQuery();
                     q.setQuery(escapedSearchTerms);
-
+                    q.setFields("score");
+                    q.setFields("identifier");
                     q.set("df", "text");
-                    q.setRows(100);
+                    q.set("fl", "*, score");
 
+                    q.setRows(1000);
                     QueryResponse response = client.query("Practica1", q);
 
                     SolrDocumentList list = response.getResults();
 
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter("trec_solr_file"))) {
-                        int j = 0;
-                        for (SolrDocument doc : list) {
-                            bw.write(it +" P0 "+ doc.getFieldValue("identifier")+" "+(j++)+" "+doc.getFieldValue("score")+"\n");
+                    int j = 0;
+                    for (SolrDocument doc : list) {
+
+                        Float score = (Float) doc.getFieldValue("score");
+
+                        float scoreValue = 0.0f;
+                        if (score != null) {
+                            scoreValue = score.floatValue();
                         }
+
+                        bw.write(id + " P0 " + doc.getFieldValue("identifier") + " " + (j++) + " " + scoreValue + " MB\n");
                     }
 
                 }
 
                 id = "";
                 text = "";
-                it++;
+
                 start = false;
 
             } while (!end);
-            
+
             client.close();
-            
-            
+
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
